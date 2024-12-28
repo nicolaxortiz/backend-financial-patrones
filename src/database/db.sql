@@ -15,7 +15,6 @@ CREATE TABLE users (
 CREATE TABLE accounts (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
-    amount DECIMAL(12, 2) DEFAULT 0.00,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id_user INT NOT NULL,
     CONSTRAINT fk_user FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE
@@ -25,7 +24,7 @@ CREATE TABLE accounts (
 CREATE TABLE moves (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
-    amount NUMERIC(12, 2) NOT NULL,
+    amount INTEGER NOT NULL,
     date TIMESTAMP NOT NULL,
     type VARCHAR(20) NOT NULL,
     id_account INT NOT NULL,
