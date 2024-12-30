@@ -66,11 +66,12 @@ export const accountsController = {
   },
 
   update: async (req, res) => {
-    const { name, id } = req.body;
+    const { id } = req.params;
+    const { name } = req.body;
 
     try {
       const result = await pool.query(
-        "UPDATE accounts SET name=$1  WHERE id=$2",
+        "UPDATE accounts SET name=$1, updated_at = CURRENT_TIMESTAMP WHERE id=$2",
         [name, id]
       );
 
@@ -93,6 +94,11 @@ export const accountsController = {
     const { id } = req.params;
 
     try {
+      const resultMoves = await pool.query(
+        "DELETE FROM moves WHERE id_account=$1",
+        [id]
+      );
+
       const result = await pool.query("DELETE FROM accounts WHERE id=$1", [id]);
 
       if (result.rowCount > 0) {
