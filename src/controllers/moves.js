@@ -50,13 +50,15 @@ export const movesController = {
   },
 
   getByName: async (req, res) => {
-    const { id_account, name, offset } = req.body;
+    const { id, name, offset } = req.params;
 
     try {
       const count = await pool.query(
         `SELECT COUNT(*) FROM moves WHERE id_account = $1 and name LIKE '%${name}%'`,
-        [id_account]
+        [id]
       );
+
+      console.log(id);
 
       if (count.rows[0].count === "0") {
         return res.status(404).send({
@@ -67,7 +69,7 @@ export const movesController = {
 
       const { rows } = await pool.query(
         `SELECT * FROM moves WHERE id_account = $1 and name LIKE '%${name}%' ORDER BY date DESC LIMIT 6 OFFSET $2`,
-        [id_account, offset]
+        [id, offset]
       );
 
       return res.status(200).send({
@@ -87,6 +89,8 @@ export const movesController = {
   create: async (req, res) => {
     const { name, amount, date, type, id_account } = req.body;
 
+    let moveType = type === "Ganancia" ? "earnings" : "expenses";
+
     try {
       const response = await pool.query(
         "INSERT INTO moves (name, amount, date, type, id_account) VALUES ($1, $2, $3, $4, $5)",
@@ -95,8 +99,8 @@ export const movesController = {
 
       if (response.rowCount > 0) {
         const updateResponse = await pool.query(
-          "UPDATE accounts SET updated_at = CURRENT_TIMESTAMP WHERE id = $1",
-          [id_account]
+          `UPDATE accounts SET updated_at = CURRENT_TIMESTAMP, ${moveType} = ${moveType} + $1 WHERE id = $2`,
+          [parseInt(amount), id_account]
         );
 
         if (updateResponse.rowCount > 0) {
@@ -134,7 +138,32 @@ export const movesController = {
 
   update: async (req, res) => {
     const { id } = req.params;
-    const { name, amount, date, type, id_account } = req.body;
+    const {
+      name,
+      amount,
+      date,
+      type,
+      id_account,
+      backType,
+      backAmount,
+      earnings,
+      expenses,
+    } = req.body;
+
+    let newEarnings = parseInt(earnings);
+    let newExpenses = parseInt(expenses);
+
+    if (backType === "Ganancia") {
+      newEarnings = newEarnings - parseInt(backAmount);
+    } else {
+      newExpenses = newExpenses - parseInt(backAmount);
+    }
+
+    if (type === "Ganancia") {
+      newEarnings = newEarnings + parseInt(amount);
+    } else {
+      newExpenses = newExpenses + parseInt(amount);
+    }
 
     try {
       const response = await pool.query(
@@ -144,8 +173,8 @@ export const movesController = {
 
       if (response.rowCount > 0) {
         const updateResponse = await pool.query(
-          "UPDATE accounts SET updated_at = CURRENT_TIMESTAMP WHERE id = $1",
-          [id_account]
+          "UPDATE accounts SET updated_at = CURRENT_TIMESTAMP, earnings = $1, expenses = $2 WHERE id = $3",
+          [newEarnings, newExpenses, id_account]
         );
 
         if (updateResponse.rowCount > 0) {
@@ -168,14 +197,16 @@ export const movesController = {
     } catch (error) {
       return res.status(500).send({
         status: 500,
-        message: `Server error, try again later, please`,
+        message: `Server error, try again later, please: ${error}`,
       });
     }
   },
 
   delete: async (req, res) => {
     const { id } = req.params;
-    const { id_account } = req.body;
+    const { id_account, type, amount } = req.body;
+
+    let moveType = type === "Ganancia" ? "earnings" : "expenses";
 
     try {
       const response = await pool.query("DELETE FROM moves WHERE id = $1", [
@@ -184,8 +215,8 @@ export const movesController = {
 
       if (response.rowCount > 0) {
         const updateResponse = await pool.query(
-          "UPDATE accounts SET updated_at = CURRENT_TIMESTAMP WHERE id = $1",
-          [id_account]
+          `UPDATE accounts SET updated_at = CURRENT_TIMESTAMP, ${moveType} = ${moveType} - $1 WHERE id = $2`,
+          [amount, id_account]
         );
 
         if (updateResponse.rowCount > 0) {
