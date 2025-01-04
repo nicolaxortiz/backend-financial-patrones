@@ -60,7 +60,7 @@ export const usersController = {
     const { email, password } = req.body;
 
     try {
-      const { rows } = await pool.query("SELECT *  FROM users WHERE email=$1", [
+      const { rows } = await pool.query("SELECT * FROM users WHERE email=$1", [
         email,
       ]);
 
@@ -77,18 +77,26 @@ export const usersController = {
       );
 
       if (verification) {
-        return res.status(200).send({
-          status: 200,
-          message: "success",
-          row: {
-            id: rows[0].id,
-            name: rows[0].name,
-            lastname: rows[0].lastname,
-            document: rows[0].document,
-            birth_date: rows[0].birth_date,
-            email: rows[0].email,
-            phone: rows[0].phone,
-          },
+        if (rows[0].is_validate) {
+          return res.status(200).send({
+            status: 200,
+            message: "success",
+            row: {
+              id: rows[0].id,
+              name: rows[0].name,
+              lastname: rows[0].lastname,
+              document: rows[0].document,
+              birth_date: rows[0].birth_date,
+              email: rows[0].email,
+              phone: rows[0].phone,
+            },
+          });
+        }
+
+        return res.status(401).send({
+          status: 401,
+          message: "User not validated",
+          id: rows[0].id,
         });
       } else {
         return res.status(404).send({
@@ -100,6 +108,29 @@ export const usersController = {
       return res.status(500).send({
         status: 500,
         message: "Server error, try again later, please",
+      });
+    }
+  },
+
+  updateStatus: async (req, res) => {
+    const { id } = req.body;
+
+    try {
+      const result = await pool.query(
+        "UPDATE users SET is_validate = true WHERE id=$1",
+        [id]
+      );
+
+      if (result.rowCount > 0) {
+        return res.status(200).send({
+          status: 200,
+          message: "success",
+        });
+      }
+    } catch (error) {
+      return res.status(500).send({
+        status: 500,
+        message: `Server error, try again later, please`,
       });
     }
   },
