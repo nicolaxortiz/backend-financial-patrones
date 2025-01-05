@@ -20,4 +20,23 @@ export const passwordTools = {
       throw error;
     }
   },
+
+  randomPassAndHash: async() => {
+    const characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?";
+      let password = "";
+
+      for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        password += characters[randomIndex];
+      }
+
+      try {
+        const hash = await bcrypt.hash(password, 12);
+        return {password, hash};
+      } catch (error) {
+        console.log("Error encriptando la contraseña:", error);
+        throw error;
+      }
+  }
 };

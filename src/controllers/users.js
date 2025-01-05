@@ -1,5 +1,6 @@
 import { pool } from "../db.js";
 import { passwordTools } from "../functions/password.js";
+import { emails } from "../SMTP/sender.js";
 
 export const usersController = {
   create: async (req, res) => {
@@ -112,6 +113,45 @@ export const usersController = {
     }
   },
 
+  getbyEmail: async (req, res) => {
+    const {email} = req.body;
+
+    try {
+      const {rows} = await pool.query("SELECT id, name, email FROM users WHERE email=$1", [email])
+
+      if(rows.length === 0){
+        res.status(404).send({
+          status: 404,
+          message: "User not found"
+        })
+      }
+
+      const {newPassword, hashPassword} = passwordTools.randomPassAndHash()
+
+      const updateResult = await pool.query("UPDATE users SET password=$1 WHERE id=$2", [hashPassword, rows[0].id])
+
+      if (updateResult.rowCount > 0) {
+
+        await emails.newPasswordRecovery(email, newPassword)
+
+        return res.status(200).send({
+          status: 200,
+          message: "Check your email and use your new password",
+        });
+      }
+
+      return res.status(404).send({
+        status: 404,
+        message: "Email not found, try register your account",
+      });
+    } catch (error) {
+      res.status(500).send({
+        status: 500,
+        message: `Server error, try again later, please`
+      })
+    }
+  },
+
   updateStatus: async (req, res) => {
     const { id } = req.body;
 
@@ -127,6 +167,11 @@ export const usersController = {
           message: "success",
         });
       }
+
+      return res.status(404).send({
+        status: 404,
+        message: "User not found",
+      });
     } catch (error) {
       return res.status(500).send({
         status: 500,
