@@ -114,25 +114,30 @@ export const usersController = {
   },
 
   getbyEmail: async (req, res) => {
-    const {email} = req.body;
+    const { email } = req.body;
 
     try {
-      const {rows} = await pool.query("SELECT id, name, email FROM users WHERE email=$1", [email])
+      const { rows } = await pool.query(
+        "SELECT id, name, email FROM users WHERE email=$1",
+        [email]
+      );
 
-      if(rows.length === 0){
+      if (rows.length === 0) {
         res.status(404).send({
           status: 404,
-          message: "User not found"
-        })
+          message: "User not found",
+        });
       }
 
-      const {newPassword, hashPassword} = passwordTools.randomPassAndHash()
+      const { password, hash } = await passwordTools.randomPassAndHash();
 
-      const updateResult = await pool.query("UPDATE users SET password=$1 WHERE id=$2", [hashPassword, rows[0].id])
+      const updateResult = await pool.query(
+        "UPDATE users SET password=$1 WHERE id=$2",
+        [hash, rows[0].id]
+      );
 
       if (updateResult.rowCount > 0) {
-
-        await emails.newPasswordRecovery(email, newPassword)
+        await emails.newPasswordRecovery(email, password);
 
         return res.status(200).send({
           status: 200,
@@ -147,8 +152,8 @@ export const usersController = {
     } catch (error) {
       res.status(500).send({
         status: 500,
-        message: `Server error, try again later, please`
-      })
+        message: `Server error, try again later, please: ${error}`,
+      });
     }
   },
 

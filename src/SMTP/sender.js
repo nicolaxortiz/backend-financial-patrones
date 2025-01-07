@@ -23,7 +23,7 @@ export const emails = {
     const emailConfig = {
       from: process.env.EMAIL_SMTP,
       to: userEmail,
-      subject: "Recordatorio de la contraseña - Financial App",
+      subject: "Recuperación de contraseña - Financial App",
       text: `Estimado usuario, su nueva contraseña es: ${newPassword}
       \nLe recordamos que ingrese a la plataforma y cambie su contraseña para mantener su seguridad. \nEste mensaje ha sido enviado a petición del usuario.`,
     };
