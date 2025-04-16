@@ -1,15 +1,14 @@
 import express from "express";
 import cors from "cors";
-import { pool } from "./db.js";
-import userRouter from "./routes/users.routes.js";
-import accountRouter from "./routes/accounts.routes.js";
-import movesRouter from "./routes/moves.routes.js";
-import codesRouter from "./routes/codes.routes.js";
+import userRouter from "./src/routes/users.routes.js";
+import accountRouter from "./src/routes/accounts.routes.js";
+import movesRouter from "./src/routes/moves.routes.js";
+import codesRouter from "./src/routes/codes.routes.js";
 
 const app = express();
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: "*",
   optionsSuccessStatus: 200,
 };
 
