@@ -1,14 +1,33 @@
-import { pool } from "../db.js";
+import {
+  PersonalAccountFactory,
+  BusinessAccountFactory,
+} from "../models/accounts/AccountFactory.js";
+import { DatabaseConnection } from "../db.js";
+
+const pool = DatabaseConnection.getInstance();
 
 export const accountsController = {
   create: async (req, res) => {
-    const { name, id_user } = req.body;
+    const { name, id_user, id_account_type } = req.body;
+    console.log(id_account_type);
+
+    const account =
+      id_account_type <= 2
+        ? PersonalAccountFactory.createPersonalAccount(
+            name,
+            id_user,
+            id_account_type
+          )
+        : BusinessAccountFactory.createBusinessAccount(
+            name,
+            id_user,
+            id_account_type
+          );
+
+    const query = account.generateInsertSQL();
 
     try {
-      const result = await pool.query(
-        "INSERT INTO accounts(name, id_user) VALUES ($1, $2)",
-        [name, id_user]
-      );
+      const result = await pool.query(query);
 
       if (result.rowCount > 0) {
         return res.status(200).send({
@@ -116,7 +135,7 @@ export const accountsController = {
       return res.status(500).send({
         status: 500,
         message: `Server error, try again later, please`,
-        error: error,
+        error: error.message,
       });
     }
   },

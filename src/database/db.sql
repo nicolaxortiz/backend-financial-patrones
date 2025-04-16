@@ -7,11 +7,12 @@ CREATE TABLE users (
     birth_date DATE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(200) NOT NULL,
-    phone VARCHAR(15) UNIQUE NOT NULL,
+    phone VARCHAR(15) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_validate BOOLEAN DEFAULT false
+    is_validate BOOLEAN DEFAULT false,
+    address VARCHAR(200),
+    role VARCHAR(50) DEFAULT 'client';
 );
-
 
 -- Create table for authentication codes
 CREATE TABLE codes (
@@ -21,7 +22,19 @@ CREATE TABLE codes (
     CONSTRAINT fk_user FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Create table for accounts information
+CREATE TABLE account_types (
+    id SERIAL PRIMARY KEY,
+    family VARCHAR(50) NOT NULL,
+    variant VARCHAR(50) NOT NULL, 
+    UNIQUE(family, variant)
+);
+
+INSERT INTO account_types (family, variant) VALUES
+('Personal', 'Ahorro'),
+('Personal', 'Inversión'),
+('Empresarial', 'Ahorro'),
+('Empresarial', 'Inversión');
+
 CREATE TABLE accounts (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
@@ -29,7 +42,9 @@ CREATE TABLE accounts (
     expenses BIGINT DEFAULT 0,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id_user INT NOT NULL,
-    CONSTRAINT fk_user FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE
+    id_account_type INT NOT NULL,
+    CONSTRAINT fk_user FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_account_type FOREIGN KEY (id_account_type) REFERENCES account_types(id)
 );
 
 -- Create table for moves information

@@ -1,6 +1,8 @@
-import { pool } from "../db.js";
 import { randomNumber } from "../functions/randomNumber.js";
 import { emails } from "../SMTP/sender.js";
+import { DatabaseConnection } from "../db.js";
+
+const pool = DatabaseConnection.getInstance();
 
 export const codesController = {
   create: async (req, res) => {

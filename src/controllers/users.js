@@ -1,19 +1,39 @@
-import { pool } from "../db.js";
 import { passwordTools } from "../functions/password.js";
 import { emails } from "../SMTP/sender.js";
+import { UserBuilder } from "../models/users/UserBuilder.js";
+import { DatabaseConnection } from "../db.js";
+
+const pool = DatabaseConnection.getInstance();
 
 export const usersController = {
   create: async (req, res) => {
-    const { name, lastname, document, birth_date, email, password, phone } =
-      req.body;
+    const {
+      name,
+      lastname,
+      document,
+      birth_date,
+      email,
+      password,
+      phone,
+      address,
+    } = req.body;
 
     const newPassword = await passwordTools.hashPassword(password);
 
+    const builder = new UserBuilder();
+    const user = builder
+      .setName(name)
+      .setLastname(lastname)
+      .setDocument(document)
+      .setBirthDate(birth_date)
+      .setEmail(email)
+      .setPassword(newPassword)
+      .build();
+
+    const query = user.generateInsertSQL();
+
     try {
-      const result = await pool.query(
-        `INSERT INTO users(name, lastname, document, birth_date, email, password, phone) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [name, lastname, document, birth_date, email, newPassword, phone]
-      );
+      const result = await pool.query(query);
 
       if (result.rowCount > 0) {
         return res.status(200).send({
@@ -36,7 +56,7 @@ export const usersController = {
       } else {
         return res.status(500).send({
           status: 500,
-          message: `Server error, try again later, please`,
+          message: `Server error, try again later, please: ${err.message}`,
         });
       }
     }
@@ -90,6 +110,8 @@ export const usersController = {
               birth_date: rows[0].birth_date,
               email: rows[0].email,
               phone: rows[0].phone,
+              address: rows[0].address,
+              role: rows[0].role,
             },
           });
         }
@@ -161,10 +183,27 @@ export const usersController = {
     const { id } = req.body;
 
     try {
-      const result = await pool.query(
-        "UPDATE users SET is_validate = true WHERE id=$1",
-        [id]
-      );
+      const searchQuery = await pool.query(`SELECT * FROM users WHERE id=$1`, [
+        id,
+      ]);
+      if (searchQuery.rowCount === 0) {
+        return res.status(404).send({
+          status: 404,
+          message: "User not found",
+        });
+      }
+
+      const existingUser = searchQuery.rows[0];
+
+      const builder = new UserBuilder();
+      const user = builder
+        .fromExisting(existingUser)
+        .setIsValidate(true)
+        .build();
+
+      const query = user.generateUpdateValidate(id);
+
+      const result = await pool.query(query);
 
       if (result.rowCount > 0) {
         return res.status(200).send({
@@ -181,6 +220,56 @@ export const usersController = {
       return res.status(500).send({
         status: 500,
         message: `Server error, try again later, please`,
+      });
+    }
+  },
+
+  update: async (req, res) => {
+    const { id, name, lastname, document, email, phone, address } = req.body;
+
+    try {
+      const searchQuery = await pool.query(`SELECT * FROM users WHERE id=$1`, [
+        id,
+      ]);
+      if (searchQuery.rowCount === 0) {
+        return res.status(404).send({
+          status: 404,
+          message: "User not found",
+        });
+      }
+
+      const existingUser = searchQuery.rows[0];
+
+      const builder = new UserBuilder();
+      const user = builder
+        .fromExisting(existingUser)
+        .setName(name)
+        .setLastname(lastname)
+        .setDocument(document)
+        .setEmail(email)
+        .setPhone(phone)
+        .setAddress(address)
+        .build();
+
+      const query = user.generateUpdateSQL(id);
+
+      const result = await pool.query(query);
+
+      if (result.rowCount > 0) {
+        return res.status(200).send({
+          status: 200,
+          message: "success",
+        });
+      }
+
+      return res.status(404).send({
+        status: 404,
+        message: "User not found",
+      });
+    } catch (error) {
+      return res.status(500).send({
+        status: 500,
+        message: `Server error, try again later, please: ${error.message}`,
       });
     }
   },

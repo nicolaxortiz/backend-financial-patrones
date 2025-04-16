@@ -1,4 +1,7 @@
-import { pool } from "../db.js";
+import { MoveFactory } from "../models/moves/MoveFactory.js";
+import { DatabaseConnection } from "../db.js";
+
+const pool = DatabaseConnection.getInstance();
 
 export const movesController = {
   getByAccountId: async (req, res) => {
@@ -88,14 +91,13 @@ export const movesController = {
 
   create: async (req, res) => {
     const { name, amount, date, type, id_account } = req.body;
+    const move = MoveFactory.createMove(name, amount, date, type, id_account);
+    const query = move.generateInsertSQL();
 
     let moveType = type === "Ganancia" ? "earnings" : "expenses";
 
     try {
-      const response = await pool.query(
-        "INSERT INTO moves (name, amount, date, type, id_account) VALUES ($1, $2, $3, $4, $5)",
-        [name, amount, date, type, id_account]
-      );
+      const response = await pool.query(query);
 
       if (response.rowCount > 0) {
         const updateResponse = await pool.query(
