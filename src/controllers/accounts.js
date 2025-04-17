@@ -9,7 +9,6 @@ const pool = DatabaseConnection.getInstance();
 export const accountsController = {
   create: async (req, res) => {
     const { name, id_user, id_account_type } = req.body;
-    console.log(id_account_type);
 
     const account =
       id_account_type <= 2
@@ -27,7 +26,7 @@ export const accountsController = {
     const query = account.generateInsertSQL();
 
     try {
-      const result = await pool.query(query);
+      const result = await pool.query(query, [name, id_user, id_account_type]);
 
       if (result.rowCount > 0) {
         return res.status(200).send({
@@ -50,7 +49,7 @@ export const accountsController = {
       } else {
         return res.status(500).send({
           status: 500,
-          message: `Server error, try again later, please`,
+          message: `Server error, try again later, please: ${error.message}`,
         });
       }
     }

@@ -11,7 +11,7 @@ class Account {
 
   generateInsertSQL() {
     return `INSERT INTO accounts (name, earnings, expenses, updated_at, id_user, id_account_type) 
-                VALUES ('${this.name}', ${this.earnings}, ${this.expenses}, '${this.updatedAt}', ${this.idUser}, ${this.idAccountType})`;
+                VALUES ($1, '${this.earnings}', '${this.expenses}', '${this.updatedAt}', $2, $3)`;
   }
 }
 

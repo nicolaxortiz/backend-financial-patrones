@@ -7,16 +7,7 @@ const pool = DatabaseConnection.getInstance();
 
 export const usersController = {
   create: async (req, res) => {
-    const {
-      name,
-      lastname,
-      document,
-      birth_date,
-      email,
-      password,
-      phone,
-      address,
-    } = req.body;
+    const { name, lastname, document, birth_date, email, password } = req.body;
 
     const newPassword = await passwordTools.hashPassword(password);
 
@@ -33,7 +24,14 @@ export const usersController = {
     const query = user.generateInsertSQL();
 
     try {
-      const result = await pool.query(query);
+      const result = await pool.query(query, [
+        name,
+        lastname,
+        document,
+        birth_date,
+        email,
+        newPassword,
+      ]);
 
       if (result.rowCount > 0) {
         return res.status(200).send({
@@ -253,7 +251,14 @@ export const usersController = {
 
       const query = user.generateUpdateSQL(id);
 
-      const result = await pool.query(query);
+      const result = await pool.query(query, [
+        name,
+        lastname,
+        document,
+        email,
+        phone,
+        address,
+      ]);
 
       if (result.rowCount > 0) {
         return res.status(200).send({

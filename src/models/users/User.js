@@ -27,21 +27,20 @@ export class User {
   }
 
   generateInsertSQL() {
-    return `INSERT INTO users (name, lastname, document, birth_date, email, password, phone, is_validate) 
-                VALUES ('${this.name}', '${this.lastname}', '${this.document}', '${this.birthDate}', 
-                        '${this.email}', '${this.password}', '${this.phone}', ${this.isValidate})`;
+    return `INSERT INTO users (name, lastname, document, birth_date, email, password, is_validate) 
+                VALUES ($1, $2, $3, $4, $5, $6, ${this.isValidate})`;
   }
 
   generateUpdateSQL(id) {
     return `UPDATE users 
-                SET name = '${this.name}', lastname = '${this.lastname}', document = '${this.document}', email = '${this.email}', 
-                    phone = '${this.phone}', address = '${this.address}'
+                SET name = $1, lastname = $2, document = $3, email = $4, 
+                    phone = $5, address = $6
                 WHERE id = ${id}`;
   }
 
   generateUpdateValidate(id) {
     return `UPDATE users 
-                SET is_validate = true
+                SET is_validate = ${this.isValidate}
                 WHERE id = ${id}`;
   }
 }

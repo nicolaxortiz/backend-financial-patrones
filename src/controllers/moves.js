@@ -97,7 +97,13 @@ export const movesController = {
     let moveType = type === "Ganancia" ? "earnings" : "expenses";
 
     try {
-      const response = await pool.query(query);
+      const response = await pool.query(query, [
+        name,
+        amount,
+        date,
+        type,
+        id_account,
+      ]);
 
       if (response.rowCount > 0) {
         const updateResponse = await pool.query(
@@ -132,7 +138,7 @@ export const movesController = {
       } else {
         return res.status(500).send({
           status: 500,
-          message: `Server error, try again later, please`,
+          message: `Server error, try again later, please: ${error.message}`,
         });
       }
     }

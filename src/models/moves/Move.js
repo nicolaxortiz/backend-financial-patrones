@@ -9,7 +9,7 @@ class Move {
   }
 
   generateInsertSQL() {
-    return `INSERT INTO moves (name, amount, date, type, id_account) VALUES ('${this.name}', ${this.amount}, '${this.date}', '${this.type}', ${this.idAccount})`;
+    return `INSERT INTO moves (name, amount, date, type, id_account) VALUES ($1, $2, $3, $4, $5)`;
   }
 }
 
