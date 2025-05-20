@@ -1,26 +1,32 @@
+import { IncomeStrategy, ExpenseStrategy } from "./MoveStrategy.js";
+
 class Move {
-  constructor(name, amount, date, type, idAccount) {
+  constructor(name, amount, date, idAccount, strategy) {
     this.id = null;
     this.name = name;
     this.amount = amount;
     this.date = date;
-    this.type = type;
     this.idAccount = idAccount;
+    this.strategy = strategy;
   }
 
   generateInsertSQL() {
-    return `INSERT INTO moves (name, amount, date, type, id_account) VALUES ($1, $2, $3, $4, $5)`;
+    return this.strategy.generateInsertSQL();
+  }
+
+  generateUpdateSQL() {
+    return this.strategy.generateUpdateSQL();
   }
 }
 
 export class Income extends Move {
   constructor(name, amount, date, idAccount) {
-    super(name, amount, date, "Ganancia", idAccount);
+    super(name, amount, date, idAccount, new IncomeStrategy());
   }
 }
 
 export class Expense extends Move {
   constructor(name, amount, date, idAccount) {
-    super(name, amount, date, "Gasto", idAccount);
+    super(name, amount, date, idAccount, new ExpenseStrategy());
   }
 }

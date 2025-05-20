@@ -101,7 +101,6 @@ export const movesController = {
         name,
         amount,
         date,
-        type,
         id_account,
       ]);
 
@@ -158,6 +157,9 @@ export const movesController = {
       expenses,
     } = req.body;
 
+    const move = MoveFactory.createMove(name, amount, date, type, id_account);
+    const query = move.generateUpdateSQL();
+
     let newEarnings = parseInt(earnings);
     let newExpenses = parseInt(expenses);
 
@@ -174,10 +176,7 @@ export const movesController = {
     }
 
     try {
-      const response = await pool.query(
-        "UPDATE moves SET name = $1, amount = $2, date = $3, type = $4 WHERE id = $5",
-        [name, amount, date, type, id]
-      );
+      const response = await pool.query(query, [name, amount, date, id]);
 
       if (response.rowCount > 0) {
         const updateResponse = await pool.query(
